@@ -15,6 +15,7 @@ import (
 	"unsafe"
 
 	"github.com/ledgerwatch/erigon-lib/common/assert"
+	"github.com/ledgerwatch/erigon-lib/kv/iter"
 	"github.com/ledgerwatch/erigon-lib/kv/membatch"
 	"github.com/ledgerwatch/erigon-lib/kv/membatchwithdb"
 
@@ -976,6 +977,26 @@ func (sd *SharedDomains) DomainDelPrefix(domain kv.Domain, prefix []byte) error 
 	return nil
 }
 func (sd *SharedDomains) Tx() kv.Tx { return sd.roTx }
+
+func (sd *SharedDomains) DomainGetAsOf(name kv.Domain, k, k2 []byte, ts uint64) (v []byte, ok bool, err error) {
+	panic("DomainGetAsOf")
+}
+
+func (sd *SharedDomains) HistoryGet(name kv.History, k []byte, ts uint64) (v []byte, ok bool, err error) {
+	panic("HistoryGet")
+}
+
+func (sd *SharedDomains) IndexRange(name kv.InvertedIdx, k []byte, fromTs, toTs int, asc order.By, limit int) (timestamps iter.U64, err error) {
+	panic("IndexRange")
+}
+
+func (sd *SharedDomains) HistoryRange(name kv.History, fromTs, toTs int, asc order.By, limit int) (it iter.KV, err error) {
+	panic("HistoryRange")
+}
+
+func (sd *SharedDomains) DomainRange(name kv.Domain, fromKey, toKey []byte, ts uint64, asc order.By, limit int) (it iter.KV, err error) {
+	panic("DomainRange")
+}
 
 type SharedDomainsCommitmentContext struct {
 	sd           *SharedDomains
