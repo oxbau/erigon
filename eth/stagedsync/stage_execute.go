@@ -276,9 +276,9 @@ func ExecBlockV3(s *StageState, u Unwinder, tx kv.RwTx, toBlock uint64, ctx cont
 	if to < s.BlockNumber {
 		return nil
 	}
-	if to > s.BlockNumber+16 {
-		logger.Info(fmt.Sprintf("[%s] Blocks execution", logPrefix), "from", s.BlockNumber, "to", to)
-	}
+	//if to > s.BlockNumber+16 {
+	logger.Info(fmt.Sprintf("[%s] Blocks execution", logPrefix), "from", s.BlockNumber, "to", to)
+	//}
 
 	parallel := tx == nil
 	if err := ExecV3(ctx, s, u, workersCount, cfg, tx, parallel, to, logger, initialCycle); err != nil {
