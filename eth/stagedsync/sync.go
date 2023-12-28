@@ -278,6 +278,7 @@ func (s *Sync) RunNoInterrupt(db kv.RwDB, tx kv.RwTx, firstCycle bool) error {
 			continue
 		}
 
+		log.Info("runStage", "stage", stage.ID)
 		if err := s.runStage(stage, db, tx, firstCycle, badBlockUnwind); err != nil {
 			return err
 		}
