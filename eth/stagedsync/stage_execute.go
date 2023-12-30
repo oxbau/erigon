@@ -381,6 +381,7 @@ func SpawnExecuteBlocksStage(s *StageState, u Unwinder, tx kv.RwTx, toBlock uint
 	}
 
 	if cfg.historyV3 {
+		log.Info("About to do ExecBlockV3")
 		if err = ExecBlockV3(s, u, tx, toBlock, ctx, cfg, initialCycle, logger); err != nil {
 			return err
 		}
