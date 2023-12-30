@@ -929,7 +929,26 @@ func (sd *SharedDomains) IndexRange(name kv.InvertedIdx, k []byte, fromTs, toTs 
 }
 
 func (sd *SharedDomains) HistoryRange(name kv.History, fromTs, toTs int, asc order.By, limit int) (it iter.KV, err error) {
-	panic("HistoryRange")
+	if asc == order.Desc {
+		panic("not implemented yet")
+	}
+	if limit >= 0 {
+		panic("not implemented yet")
+	}
+	switch name {
+	case kv.AccountsHistory:
+		it, err = sd.aggCtx.AccountHistoryRange(fromTs, toTs, asc, limit, sd)
+	case kv.StorageHistory:
+		it, err = sd.aggCtx.StorageHistoryRange(fromTs, toTs, asc, limit, sd)
+	case kv.CodeHistory:
+		it, err = sd.aggCtx.CodeHistoryRange(fromTs, toTs, asc, limit, sd)
+	default:
+		return nil, fmt.Errorf("unexpected history name: %s", name)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return it, err
 }
 
 func (sd *SharedDomains) DomainRange(name kv.Domain, fromKey, toKey []byte, ts uint64, asc order.By, limit int) (it iter.KV, err error) {
