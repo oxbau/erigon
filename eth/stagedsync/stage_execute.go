@@ -309,7 +309,7 @@ func reconstituteBlock(agg *libstate.AggregatorV3, db kv.RoDB, tx kv.Tx) (n uint
 
 var ErrTooDeepUnwind = fmt.Errorf("too deep unwind")
 
-func unwindExec3(u *UnwindState, s *StageState, tx kv.RwTx, ctx context.Context, accumulator *shards.Accumulator, logger log.Logger) (err error) {
+func unwindExec3(u *UnwindState, s *StageState, tx kv.RwTx, ttx kv.TemporalTx, ctx context.Context, accumulator *shards.Accumulator, logger log.Logger) (err error) {
 	fmt.Printf("unwindv3: %d -> %d\n", u.CurrentBlockNumber, u.UnwindPoint)
 	//txTo, err := rawdbv3.TxNums.Min(tx, u.UnwindPoint+1)
 	//if err != nil {
@@ -337,7 +337,7 @@ func unwindExec3(u *UnwindState, s *StageState, tx kv.RwTx, ctx context.Context,
 	if err != nil {
 		return err
 	}
-	if err := rs.Unwind(ctx, tx, txNum, accumulator); err != nil {
+	if err := rs.Unwind(ctx, tx, ttx, txNum, accumulator); err != nil {
 		return fmt.Errorf("StateV3.Unwind: %w", err)
 	}
 	if err := rawdb.TruncateReceipts(tx, u.UnwindPoint+1); err != nil {
@@ -708,7 +708,7 @@ func logProgress(logPrefix string, prevBlock uint64, prevTime time.Time, current
 	return currentBlock, currentTx, currentTime
 }
 
-func UnwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ctx context.Context, cfg ExecuteBlockCfg, initialCycle bool, logger log.Logger) (err error) {
+func UnwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ttx kv.TemporalTx, ctx context.Context, cfg ExecuteBlockCfg, initialCycle bool, logger log.Logger) (err error) {
 	//fmt.Printf("unwind: %d -> %d\n", u.CurrentBlockNumber, u.UnwindPoint)
 	if u.UnwindPoint >= s.BlockNumber {
 		return nil
@@ -724,7 +724,7 @@ func UnwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ctx context
 	logPrefix := u.LogPrefix()
 	logger.Info(fmt.Sprintf("[%s] Unwind Execution", logPrefix), "from", s.BlockNumber, "to", u.UnwindPoint)
 
-	if err = unwindExecutionStage(u, s, tx, ctx, cfg, initialCycle, logger); err != nil {
+	if err = unwindExecutionStage(u, s, tx, ttx, ctx, cfg, initialCycle, logger); err != nil {
 		return err
 	}
 	if err = u.Done(tx); err != nil {
@@ -740,7 +740,7 @@ func UnwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ctx context
 	return nil
 }
 
-func unwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ctx context.Context, cfg ExecuteBlockCfg, initialCycle bool, logger log.Logger) error {
+func unwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ttx kv.TemporalTx, ctx context.Context, cfg ExecuteBlockCfg, initialCycle bool, logger log.Logger) error {
 	logPrefix := s.LogPrefix()
 	stateBucket := kv.PlainState
 	storageKeyLength := length.Addr + length.Incarnation + length.Hash
@@ -762,7 +762,7 @@ func unwindExecutionStage(u *UnwindState, s *StageState, tx kv.RwTx, ctx context
 
 	//TODO: why we don't call accumulator.ChangeCode???
 	if cfg.historyV3 {
-		return unwindExec3(u, s, tx, ctx, accumulator, logger)
+		return unwindExec3(u, s, tx, ttx, ctx, accumulator, logger)
 	}
 
 	changes := etl.NewCollector(logPrefix, cfg.dirs.Tmp, etl.NewOldestEntryBuffer(etl.BufferOptimalSize), logger)
