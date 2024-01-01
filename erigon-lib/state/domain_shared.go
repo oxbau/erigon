@@ -17,6 +17,7 @@ import (
 	"github.com/ledgerwatch/erigon-lib/kv/iter"
 	"github.com/ledgerwatch/erigon-lib/kv/membatch"
 	"github.com/ledgerwatch/erigon-lib/kv/membatchwithdb"
+	"github.com/ledgerwatch/log/v3"
 
 	btree2 "github.com/tidwall/btree"
 
@@ -61,6 +62,7 @@ type SharedDomains struct {
 	aggCtx *AggregatorV3Context
 	sdCtx  *SharedDomainsCommitmentContext
 	roTx   kv.Tx
+	logger log.Logger
 
 	txNum    uint64
 	blockNum atomic.Uint64
@@ -93,7 +95,7 @@ func IsSharedDomains(tx kv.Tx) bool {
 	return ok
 }
 
-func NewSharedDomains(tx kv.Tx) *SharedDomains {
+func NewSharedDomains(tx kv.Tx, logger log.Logger) *SharedDomains {
 	if casted, ok := tx.(*SharedDomains); ok {
 		casted.noFlush++
 		return casted
@@ -110,6 +112,7 @@ func NewSharedDomains(tx kv.Tx) *SharedDomains {
 	}
 
 	sd := &SharedDomains{
+		logger: logger,
 		aggCtx: ac,
 		roTx:   tx,
 		//trace:       true,
@@ -139,7 +142,7 @@ func NewSharedDomains(tx kv.Tx) *SharedDomains {
 
 func (sd *SharedDomains) AggCtx() interface{} { return sd.aggCtx }
 func (sd *SharedDomains) WithMemBatch() *SharedDomains {
-	sd.RwTx = membatchwithdb.NewMemoryBatch(sd.roTx, sd.aggCtx.a.dirs.Tmp)
+	sd.RwTx = membatchwithdb.NewMemoryBatch(sd.roTx, sd.aggCtx.a.dirs.Tmp, sd.logger)
 	sd.withMemBatch = true
 	return sd
 }
